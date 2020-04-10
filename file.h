@@ -11,4 +11,14 @@ typedef struct arbore_part_1 {
     char player;
 } arbore_part_1_node;
 
+typedef struct arbore_part_2 {
+    int value;
+    struct arbore_part_2 *child;
+    struct arbore_part_2 *next;
+    struct arbore_part_2 *prev;
+    struct arbore_part_2 *parent;
+    int nr_of_children;
+    //tipul de calcul de facut, -1 pt mini, 1 pt max
+    int type;
+} arbore_part_2_node;
 #endif /* __FILE_H__ */
