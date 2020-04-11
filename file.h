@@ -21,9 +21,5 @@ typedef struct arbore_part_2 {
     int type;
 } arbore_part_2_node;
 
-typedef struct part_2_auxiliary_list {
-    arbore_part_2_node *nod_in_arbore;
-    struct part_2_auxiliary_list *next;
-} part_2_list;
 
 #endif /* __FILE_H__ */

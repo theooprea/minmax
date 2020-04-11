@@ -242,53 +242,6 @@ arbore_part_2_node *new_node_part_2()
     return nod_nou;
 }
 
-part_2_list *new_list_node()
-{
-    part_2_list *nod_nou = malloc(sizeof(part_2_list));
-    nod_nou->nod_in_arbore = NULL;
-    nod_nou->next = NULL;
-    return nod_nou;
-}
-
-void add_in_list(part_2_list **head, part_2_list *nod_nou)
-{
-    if((*head) == NULL)
-    {
-        nod_nou->next = *head;
-        *head = nod_nou;
-    }
-    else
-    {
-        part_2_list *i = *head;
-        while(i->next)
-        {
-            i = i->next;
-        }
-        i->next = nod_nou;
-    }
-}
-
-void free_list(part_2_list **head)
-{
-    part_2_list *aux;
-    while((*head) != NULL)
-    {
-        aux = *head;
-        *head = (*head)->next;
-        free(aux);
-    }
-}
-
-void print_list(part_2_list *head)
-{
-    while(head != NULL)
-    {
-        printf("%d ", head->nod_in_arbore->type);
-        head = head->next;
-    }
-    printf("\n");
-}
-
 int braket_to_int(char *line)
 {
     char *p = line + 1;
@@ -351,20 +304,30 @@ void push_child(arbore_part_2_node **head, arbore_part_2_node *nod_nou, arbore_p
     
 }
 
-void work_with_line(arbore_part_2_node *root, int index_of_line, part_2_list **list_root)
+void work_with_line(arbore_part_2_node *root, int index_of_line, int *index_of_vector, int *vector_values, int *vector_type_of_brakets)
 {
     if(root == NULL)
         return;
-
+    int i;
     if(level_from_root(root) == index_of_line)
     {
-        part_2_list *nod = new_list_node();
-        nod->nod_in_arbore = root;
-        add_in_list(list_root, nod);
+        if(vector_type_of_brakets[(*index_of_vector)] == 1)
+        {
+            for(i = 0; i < vector_values[(*index_of_vector)]; i++)
+            {
+                arbore_part_2_node *nod_nou = new_node_part_2();
+                push_child(&(root->child), nod_nou, root);
+            }
+        }
+        else
+        {
+            root->value = vector_values[(*index_of_vector)];
+        }
+        *index_of_vector = *index_of_vector + 1;
     }
 
-    work_with_line(root->child, index_of_line, list_root);
-    work_with_line(root->next, index_of_line, list_root);
+    work_with_line(root->child, index_of_line, index_of_vector, vector_values, vector_type_of_brakets);
+    work_with_line(root->next, index_of_line, index_of_vector, vector_values, vector_type_of_brakets);
 }
 
 void print_tabs_part_2(arbore_part_2_node *nod, FILE *fisier_out)
@@ -479,13 +442,12 @@ int main(int argc, char **argv)
         free_everything(root, nr_rows, nr_columns);
     }
     if(strstr(argv[1], "-c2"))
-    {
+    {       
         int nr_rows, i, j, k;
         char *input_buffer = malloc(1000000 * sizeof(char));
         int *vector_values = malloc(500000 * sizeof(int));
         int *vector_type_of_brakets = malloc(500000 * sizeof(int));
         arbore_part_2_node *root = new_node_part_2();
-        part_2_list *list_root = NULL;
         root->type = 1;
         FILE *fisier_in = fopen(argv[2], "r");
         FILE *fisier_out = fopen(argv[3], "w");
@@ -496,26 +458,8 @@ int main(int argc, char **argv)
             fgets(input_buffer, 1000000,fisier_in);
             input_buffer[strlen(input_buffer) - 1] = '\0';
             int number_of_numbers = transform_row(input_buffer, vector_values, vector_type_of_brakets);
-            work_with_line(root, i, &list_root);
-            part_2_list *aux = list_root;
-            for(j = 0; j < number_of_numbers; j++)
-            {
-                if(vector_type_of_brakets[j] == 1)
-                {
-                    for(k = 0; k < vector_values[j]; k++)
-                    {
-                        arbore_part_2_node *nod_nou = new_node_part_2();
-                        push_child(&(aux->nod_in_arbore->child), nod_nou, aux->nod_in_arbore);
-                    }
-                }
-                else
-                {
-                    aux->nod_in_arbore->type = 0;
-                    aux->nod_in_arbore->value = vector_values[j];   
-                }
-                aux = aux->next;
-            }
-            free_list(&list_root);
+            int index = 0;
+            work_with_line(root, i, &index, vector_values, vector_type_of_brakets);
         }
         for(i = nr_rows - 2; i >= 0; i--)
         {
