@@ -243,7 +243,64 @@ arbore_part_2_node *new_node_part_2()
     return nod_nou;
 }
 
-void transform_row(char *line, int *vector_values, int *vector_type_of_brakets)
+part_2_list *new_list_node()
+{
+    part_2_list *nod_nou = malloc(sizeof(part_2_list));
+    nod_nou->nod_in_arbore = NULL;
+    nod_nou->next = NULL;
+    nod_nou->prev = NULL;
+    return nod_nou;
+}
+
+void add_in_list(part_2_list **head, part_2_list *nod_nou)
+{
+    if((*head) == NULL)
+    {
+        nod_nou->next = *head;
+        *head = nod_nou;
+    }
+    else
+    {
+        part_2_list *i = *head;
+        while(i->next)
+        {
+            i = i->next;
+        }
+        i->next = nod_nou;
+        nod_nou->prev = i;
+    }
+}
+
+void free_list(part_2_list **head)
+{
+    part_2_list *aux;
+    while((*head) != NULL)
+    {
+        aux = *head;
+        *head = (*head)->next;
+        free(aux);
+    }
+}
+
+void print_list(part_2_list *head)
+{
+    while(head != NULL)
+    {
+        printf("%d ", head->nod_in_arbore->type);
+        head = head->next;
+    }
+    printf("\n");
+}
+
+int braket_to_int(char *line)
+{
+    char *p = line + 1;
+    p[strlen(p) - 1] = '\0';
+    int nr = atoi(p);
+    return nr;
+}
+
+int transform_row(char *line, int *vector_values, int *vector_type_of_brakets)
 {
     int i = 0;
     int type_of_braket, value;
@@ -259,16 +316,101 @@ void transform_row(char *line, int *vector_values, int *vector_type_of_brakets)
         {
             vector_type_of_brakets[i] = 0;
         }
-        printf("%s ", p);
+        vector_values[i] = braket_to_int(p);
         p = strtok(NULL, " ");
         i++;
     }
-    printf("\n");
+    return i;
 }
 
-int braket_to_int(char *line)
+int level_from_root(arbore_part_2_node *nod)
 {
+    int level = 0;
+    arbore_part_2_node *aux = nod;
+    while(aux->parent != NULL)
+    {
+        level++;
+        aux = aux->parent;
+    }
+    return level;
+}
+
+void push_child(arbore_part_2_node **head, arbore_part_2_node *nod_nou, arbore_part_2_node *parent)
+{
+    if((*head) == NULL)
+    {
+        nod_nou->next = *head;
+        *head = nod_nou;
+    }
+    else
+    {
+        arbore_part_2_node *i = *head;
+        while(i->next)
+        {
+            i = i->next;
+        }
+        i->next = nod_nou;
+        nod_nou->prev = i;
+    }
+    nod_nou->type = -1 * parent->type;
+    nod_nou->parent = parent;
     
+}
+
+void work_with_line(arbore_part_2_node *root, int index_of_line, part_2_list **list_root)
+{
+    if(root == NULL)
+        return;
+
+    int i;
+    if(level_from_root(root) == index_of_line)
+    {
+        part_2_list *nod = new_list_node();
+        nod->nod_in_arbore = root;
+        add_in_list(list_root, nod);
+    }
+
+    work_with_line(root->child, index_of_line, list_root);
+    work_with_line(root->next, index_of_line, list_root);
+}
+
+void print_tabs_part_2(arbore_part_2_node *nod)
+{
+    int number_of_tabs = level_from_root(nod);
+    int i;
+    for(i = 0; i < number_of_tabs; i++)
+    {
+        printf("\t");
+    }
+}
+
+void print_tree(arbore_part_2_node *root)
+{
+    if(root == NULL)
+        return;
+
+    print_tabs_part_2(root);
+    printf("%d\n", root->value);
+
+    print_tree(root->child);
+    print_tree(root->next);
+}
+
+void complete_tree_with_mini_max(arbore_part_2_node *root, int index_of_line)
+{
+    if(root == NULL)
+        return;
+
+    int i;
+    if(level_from_root(root) == index_of_line)
+    {
+        part_2_list *nod = new_list_node();
+        nod->nod_in_arbore = root;
+        add_in_list(list_root, nod);
+    }
+
+    complete_tree_with_mini_max(root->child, index_of_line);
+    complete_tree_with_mini_max(root->next, index_of_line);
 }
 
 int main(int argc, char **argv)
@@ -297,25 +439,52 @@ int main(int argc, char **argv)
     }
     if(strstr(argv[1], "-c2"))
     {
-        int nr_rows, i;
+        int nr_rows, i, j, k;
         char input_buffer[500000];
         int vector_values[100000], vector_type_of_brakets[100000];
         arbore_part_2_node *root = new_node_part_2();
+        part_2_list *list_root = new_list_node();
+        list_root = NULL;
+        root->type = 1;
         FILE *fisier_in = fopen(argv[2], "r");
         FILE *fisier_out = fopen(argv[3], "w");
         fscanf(fisier_in, "%d", &nr_rows);
         fgetc(fisier_in);
         printf("%d\n", nr_rows);
-        fscanf(fisier_in, "(%d)", &(root->nr_of_children));
-        fgetc(fisier_in);
-        printf("%d\n", root->nr_of_children);
         for(i = 0; i < nr_rows; i++)
         {
             fgets(input_buffer, 500000,fisier_in);
             input_buffer[strlen(input_buffer) - 1] = '\0';
-            printf("%s %ld\n", input_buffer, strlen(input_buffer));
-            transform_row(input_buffer, vector_values, vector_type_of_brakets);
+            printf("%s\n", input_buffer);
+            int number_of_numbers = transform_row(input_buffer, vector_values, vector_type_of_brakets);
+            /*for(j = 0; j < number_of_numbers; j++)
+            {
+                printf("%d %d ", vector_values[j], vector_type_of_brakets[j]);
+            }
+            printf("\n");*/
+            work_with_line(root, i, &list_root);
+            part_2_list *aux = list_root;
+            for(j = 0; j < number_of_numbers; j++)
+            {
+                //printf("%d %d \n", vector_values[j], vector_type_of_brakets[j]);
+                if(vector_type_of_brakets[j] == 1)
+                {
+                    for(k = 0; k < vector_values[j]; k++)
+                    {
+                        arbore_part_2_node *nod_nou = new_node_part_2();
+                        push_child(&(aux->nod_in_arbore->child), nod_nou, aux->nod_in_arbore);
+                    }
+                }
+                else
+                {
+                    aux->nod_in_arbore->value = vector_values[j];   
+                }
+                aux = aux->next;
+            }
+            print_list(list_root);
+            free_list(&list_root);
         }
+        print_tree(root);
     }
     if(strstr(argv[1], "-c3"))
     {

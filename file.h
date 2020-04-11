@@ -21,4 +21,11 @@ typedef struct arbore_part_2 {
     //tipul de calcul de facut, -1 pt mini, 1 pt max
     int type;
 } arbore_part_2_node;
+
+typedef struct part_2_auxiliary_list {
+    arbore_part_2_node *nod_in_arbore;
+    struct part_2_auxiliary_list *next;
+    struct part_2_auxiliary_list *prev;
+} part_2_list;
+
 #endif /* __FILE_H__ */
