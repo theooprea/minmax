@@ -404,9 +404,7 @@ void complete_tree_with_mini_max(arbore_part_2_node *root, int index_of_line)
     int i;
     if(level_from_root(root) == index_of_line)
     {
-        part_2_list *nod = new_list_node();
-        nod->nod_in_arbore = root;
-        add_in_list(list_root, nod);
+        
     }
 
     complete_tree_with_mini_max(root->child, index_of_line);
