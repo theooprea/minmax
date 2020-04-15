@@ -15,7 +15,7 @@ typedef struct arbore_part_2 {
     int value;
     struct arbore_part_2 *child;
     struct arbore_part_2 *next;
-    //struct arbore_part_2 *prev;
+    struct arbore_part_2 *prev;
     struct arbore_part_2 *parent;
     //tipul de calcul de facut, -1 pt mini, 1 pt max, 0 pt frunza
     int type;
