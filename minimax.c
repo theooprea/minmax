@@ -251,7 +251,7 @@ int braket_to_int(char *line)
     return nr;
 }
 
-int transform_row(char *line, int *vector_values, int *vector_type_of_brakets)
+void transform_row(char *line, int *vector_values, int *vector_type_of_brakets)
 {
     int i = 0;
     char *p = strtok(line, " ");
@@ -269,7 +269,6 @@ int transform_row(char *line, int *vector_values, int *vector_type_of_brakets)
         p = strtok(NULL, " ");
         i++;
     }
-    return i;
 }
 
 int level_from_root(arbore_part_2_node *nod)
@@ -424,17 +423,27 @@ void complete_with_alpha_beta(arbore_part_2_node *root, int alpha, int beta)
     if(root->child == NULL)
         return;
     
+    //printf("%d %d\n", alpha, beta);
     if(root->type == 1)
     {
-        //complete_with_alpha_beta(root->child)
-        int max_value_children = -9999999;
         int pruned = 0;
-        arbore_part_2_node *nod = root->child;
+        complete_with_alpha_beta(root->child, alpha, beta);
+        int max_value_children = root->child->value;
+        if(max_value_children > alpha)
+        {
+            alpha = max_value_children;
+        }
+        if(alpha >= beta)
+        {
+            free_arbore_part_2(root->child->next);
+            root->child->next = NULL;
+            pruned = 1;
+        }
+        arbore_part_2_node *nod = root->child->next;
         while(nod != NULL && pruned == 0)
         {
             complete_with_alpha_beta(nod, alpha, beta);
             int value_of_child = nod->value;
-            //printf("%d\n", value_of_child);
             if(value_of_child > max_value_children)
             {
                 max_value_children = value_of_child;
@@ -443,8 +452,15 @@ void complete_with_alpha_beta(arbore_part_2_node *root, int alpha, int beta)
             {
                 alpha = max_value_children;
             }
+            /*if(alpha >= beta)
+            {
+                free_arbore_part_2(nod->next);
+                nod->next = NULL;
+                pruned = 1;
+            }
+            nod = nod->next;*/
             nod = nod->next;
-            if(alpha > beta && nod != NULL) 
+            if(alpha >= beta && nod != NULL) 
             {
                 max_value_children = nod->prev->value;
                 nod->prev->next = NULL;
@@ -457,14 +473,24 @@ void complete_with_alpha_beta(arbore_part_2_node *root, int alpha, int beta)
 
     if(root->type == -1)
     {
-        int min_value_children = 9999999;
         int pruned = 0;
-        arbore_part_2_node *nod = root->child;
+        complete_with_alpha_beta(root->child, alpha, beta);
+        int min_value_children = root->child->value;
+        if(min_value_children < beta)
+        {
+            beta = min_value_children;
+        }
+        if(alpha >= beta)
+        {
+            free_arbore_part_2(root->child->next);
+            root->child->next = NULL;
+            pruned = 1;
+        }
+        arbore_part_2_node *nod = root->child->next;
         while(nod != NULL && pruned == 0)
         {
             complete_with_alpha_beta(nod, alpha, beta);
             int value_of_child = nod->value;
-            //printf("%d\n", value_of_child);
             if(value_of_child < min_value_children)
             {
                 min_value_children = value_of_child;
@@ -473,8 +499,15 @@ void complete_with_alpha_beta(arbore_part_2_node *root, int alpha, int beta)
             {
                 beta = min_value_children;
             }
+            /*if(alpha >= beta)
+            {
+                free_arbore_part_2(nod->next);
+                nod->next = NULL;
+                pruned = 1;
+            }
+            nod = nod->next;*/
             nod = nod->next;
-            if(alpha > beta && nod != NULL)
+            if(alpha >= beta && nod != NULL)
             {
                 min_value_children = nod->prev->value;
                 nod->prev->next = NULL;
@@ -512,7 +545,7 @@ int main(int argc, char **argv)
     }
     if(strstr(argv[1], "-c2"))
     {       
-        int nr_rows, i, j, k;
+        int nr_rows, i;
         char *input_buffer = malloc(1000000 * sizeof(char));
         int *vector_values = malloc(500000 * sizeof(int));
         int *vector_type_of_brakets = malloc(500000 * sizeof(int));
@@ -526,7 +559,7 @@ int main(int argc, char **argv)
         {
             fgets(input_buffer, 1000000,fisier_in);
             input_buffer[strlen(input_buffer) - 1] = '\0';
-            int number_of_numbers = transform_row(input_buffer, vector_values, vector_type_of_brakets);
+            transform_row(input_buffer, vector_values, vector_type_of_brakets);
             int index = 0;
             work_with_line(root, i, &index, vector_values, vector_type_of_brakets);
         }
@@ -544,10 +577,10 @@ int main(int argc, char **argv)
     }
     if(strstr(argv[1], "-c3"))
     {
-        int nr_rows, i, j, k;
-        char *input_buffer = malloc(1000000 * sizeof(char));
-        int *vector_values = malloc(500000 * sizeof(int));
-        int *vector_type_of_brakets = malloc(500000 * sizeof(int));
+        int nr_rows, i;
+        char *input_buffer = malloc(10000000 * sizeof(char));
+        int *vector_values = malloc(5000000 * sizeof(int));
+        int *vector_type_of_brakets = malloc(5000000 * sizeof(int));
         arbore_part_2_node *root = new_node_part_2();
         root->type = 1;
         FILE *fisier_in = fopen(argv[2], "r");
@@ -556,13 +589,13 @@ int main(int argc, char **argv)
         fgetc(fisier_in);
         for(i = 0; i < nr_rows; i++)
         {
-            fgets(input_buffer, 1000000,fisier_in);
+            fgets(input_buffer, 10000000,fisier_in);
             input_buffer[strlen(input_buffer) - 1] = '\0';
-            int number_of_numbers = transform_row(input_buffer, vector_values, vector_type_of_brakets);
+            transform_row(input_buffer, vector_values, vector_type_of_brakets);
             int index = 0;
             work_with_line(root, i, &index, vector_values, vector_type_of_brakets);
         }
-        complete_with_alpha_beta(root, -9999999, 9999999);
+        complete_with_alpha_beta(root, -999999999, 999999999);
         print_tree(root, fisier_out);
         free_arbore_part_2(root);
         fclose(fisier_in);
