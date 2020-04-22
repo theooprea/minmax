@@ -1,0 +1,69 @@
+Oprea Theodor-Alin 314CC - tema Game Tree
+Timp de implementare 25 - 30 de ore
+
+Arhiva contine sursa principala, un file.h in care am definit structurile de
+de care am avut nevoie pt a rezolva taskurile, un Makefile cu regula de build,
+o regula de clean si una de run de care m-am folosit in timpul implementarii
+
+In sursa principala am mainul in care imi verifica daca argumentul dat in linia
+de comanda contine sirul -c1, -c2, -c3 sau -b pt a stii care cerinta are de
+rezolvat, apoi, in functie de cerinta data incepe rezolvarea. In acelasi fisier
+am functiile necesare rezolvarii tuturor taskurilor, functii de prelucrare dar
+si de afisare. Toate taskurile au structura de nod in modul urmator, datele
+necesare care sunt stocate in nod, fie matrice pt tabla de joc, fie valori pt
+taskurile 2 si 3 fie vectori de valori pt bonus, un pointer la parinte, un
+pointer la primul copil, un pointer la "fratele" next si unul la prev. Am
+adaugat next si prev pt a fi un fel de lista de copii pt un nod anume in arbore
+
+La taskul 1 am folosit mai multe functii, in ordine programul se desfasoara
+astfel: citeste numarul de linii, coloane si jucatorul ce trebuie sa mute si
+stocheaza datele intr-un nod radacina abia format. Apoi folosesc o functie care
+ii genereaza toti fii, verificand fiecare coloana daca mai poate baga o bila
+pe aceasta. Daca gaseste o coloana valida va pune piesa, creeand un nou nod si
+respectiv o matrice la care o copiaza pe a parintelui facand apoi modificarea
+in locul gasit. Acest lucru se intampla recursiv, urmand ca la fiecare pas sa
+verifice daca e game over. Afisez apoi arborele format intr-o maniera recursiva
+parcurgand in adancime prima data.
+
+Taskul 2 a fost problematic pana in punctul formarii arborelui initial, cel in
+care sunt doar frunzele puse din fisierul de intrare. Acest lucru a fost si
+cazul taskului 3 si bonusului. Citesc fiecare linie din fisier si pun valorile
+gasite intr-un vector de valori, respectiv unul care tine cont ce fel de
+paranteze sunt folosite. Dupa formarea vectorilor am format arborele,
+parcurgand recursiv arborele de fiecare daca si cand am ajuns la nivelul
+necesar fac modificarile cerute, fie adau un nr de copii fie pun valoarea
+frunzei. Modificarile se fac intr-o maniera recursiva, prima data la radacina,
+apoi la nivelul de sub, samd. Apoi pun valorile in functie de tipul nodului,
+mini sau max luand-o de la frunze spre radacina folosind functia de minimax.
+
+Taskul 3 e similar taskului 2 in ceea ce priveste formarea arborelui care are
+doar frunzele initializate. Parcurg apoi recursiv arborele si actualizez cand e
+cazul valorile alpha si beta din fiecare nod, daca la un moment dat se vede ca
+jucatorul nu va aborda o anumita cale ca il dezavantajeaza fata de o alta cale
+deja descoperita, adica daca gasesc un nod in care nod->alpha > nod->beta voi
+elimina subarborele din continuarea celui care indeplineste conditia de pruning
+si continui sa fac asta spre radacina(cum se intoarce recursiv). In main se
+incepe apelul initializand valorile rootului, alpha sa fie -inf si beta sa fie
+inf intrucat fiind de tip max si alpha fiind valoarea cea mai buna de pana acum
+daca se considera ca nu s-a explorat nimic, cea mai buna varianta pt el e chiar
+cea nula, adica -inf (forfeiting game), insa cu explorarea se modifica valorile
+lui alpha si lui beta din root, urmand sa ia valoarea cea mai buna, ne tinand
+cont de drumurile pe care nu le va lua playerul.
+
+Bonusul e aproximativ la fel cu taskul 2, cu diferenta ca fiecare nod are in
+struct un vector in loc de valoare, liniile se citesc si se prelucreaza diferit
+si nu se mai alterneaza intre -1 si 1 la nod->type, ci se tine cont de nivelul
+fata de root de unde e numarul, daca restul impartirii lui level_from_root la
+nr_players este 0, e clar ca nivelul de joc este al maxului, daca nu, va fi al
+minului. Formarea arborelui este in aceiasi maniera cu cea de la taskul 2 doar
+ca se tine cont diferit de tipul nodului, daca e min sau max.
+
+Feedback
+Tema a fost una foarte faina ca si concept cu aplicatii interesante in ai si
+utila ca sa mai lucram cu arbori, insa implementarea fara un checker si fara
+acces la toate testele a fost una destul de complicata intrucat puteau aparea
+erori de la unele cazuri particulare care sunt aproape imposibil de descoperit
+fara a vedea testul, si debuggingul e mai greu intrucat nu poti sti ce ai
+gresit daca nu ai testul pe care sa urmaresti logica programului. Desi lipsa
+checkerului si a testelor a fost una problematica, utilitatea temei e foarte
+mare si ajuta la intelegerea conceptelor de baza.
