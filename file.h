@@ -13,6 +13,7 @@ typedef struct arbore_part_1 {
 
 typedef struct arbore_part_2 {
     int value;
+    int alpha, beta;
     struct arbore_part_2 *child;
     struct arbore_part_2 *next;
     struct arbore_part_2 *prev;
@@ -21,5 +22,13 @@ typedef struct arbore_part_2 {
     int type;
 } arbore_part_2_node;
 
-
+typedef struct arbore_bonus {
+    int *values;
+    struct arbore_bonus *child;
+    struct arbore_bonus *next;
+    struct arbore_bonus *prev;
+    struct arbore_bonus *parent;
+    //tipul de calcul de facut, -1 pt mini, 1 pt max
+    int type;
+} arbore_bonus_node;
 #endif /* __FILE_H__ */

@@ -236,6 +236,8 @@ arbore_part_2_node *new_node_part_2()
     arbore_part_2_node *nod_nou = malloc(sizeof(arbore_part_2_node));
     nod_nou->value = 0;
     nod_nou->type = 0;
+    nod_nou->alpha = 0;
+    nod_nou->beta = 0;
     nod_nou->child = NULL;
     nod_nou->parent = NULL;
     nod_nou->next = NULL;
@@ -418,22 +420,23 @@ void free_arbore_part_2(arbore_part_2_node *nod)
     free(nod);
 }
 
-void complete_with_alpha_beta(arbore_part_2_node *root, int alpha, int beta)
+void complete_with_alpha_beta(arbore_part_2_node *root)
 {
     if(root->child == NULL)
         return;
     
-    //printf("%d %d\n", alpha, beta);
     if(root->type == 1)
     {
         int pruned = 0;
-        complete_with_alpha_beta(root->child, alpha, beta);
+        root->child->alpha = root->alpha;
+        root->child->beta = root->beta;
+        complete_with_alpha_beta(root->child);
         int max_value_children = root->child->value;
-        if(max_value_children > alpha)
+        if(max_value_children > root->alpha)
         {
-            alpha = max_value_children;
+            root->alpha = max_value_children;
         }
-        if(alpha >= beta)
+        if(root->alpha >= root->beta)
         {
             free_arbore_part_2(root->child->next);
             root->child->next = NULL;
@@ -442,25 +445,20 @@ void complete_with_alpha_beta(arbore_part_2_node *root, int alpha, int beta)
         arbore_part_2_node *nod = root->child->next;
         while(nod != NULL && pruned == 0)
         {
-            complete_with_alpha_beta(nod, alpha, beta);
+            nod->alpha = root->alpha;
+            nod->beta = root->beta;
+            complete_with_alpha_beta(nod);
             int value_of_child = nod->value;
             if(value_of_child > max_value_children)
             {
                 max_value_children = value_of_child;
             }
-            if(max_value_children > alpha)
+            if(max_value_children > root->alpha)
             {
-                alpha = max_value_children;
+                root->alpha = max_value_children;
             }
-            /*if(alpha >= beta)
-            {
-                free_arbore_part_2(nod->next);
-                nod->next = NULL;
-                pruned = 1;
-            }
-            nod = nod->next;*/
             nod = nod->next;
-            if(alpha >= beta && nod != NULL) 
+            if(root->alpha >= root->beta && nod != NULL) 
             {
                 max_value_children = nod->prev->value;
                 nod->prev->next = NULL;
@@ -474,13 +472,15 @@ void complete_with_alpha_beta(arbore_part_2_node *root, int alpha, int beta)
     if(root->type == -1)
     {
         int pruned = 0;
-        complete_with_alpha_beta(root->child, alpha, beta);
+        root->child->alpha = root->alpha;
+        root->child->beta = root->beta;
+        complete_with_alpha_beta(root->child);
         int min_value_children = root->child->value;
-        if(min_value_children < beta)
+        if(min_value_children < root->beta)
         {
-            beta = min_value_children;
+            root->beta = min_value_children;
         }
-        if(alpha >= beta)
+        if(root->alpha >= root->beta)
         {
             free_arbore_part_2(root->child->next);
             root->child->next = NULL;
@@ -489,25 +489,20 @@ void complete_with_alpha_beta(arbore_part_2_node *root, int alpha, int beta)
         arbore_part_2_node *nod = root->child->next;
         while(nod != NULL && pruned == 0)
         {
-            complete_with_alpha_beta(nod, alpha, beta);
+            nod->alpha = root->alpha;
+            nod->beta = root->beta;
+            complete_with_alpha_beta(nod);
             int value_of_child = nod->value;
             if(value_of_child < min_value_children)
             {
                 min_value_children = value_of_child;
             }
-            if(min_value_children < beta)
+            if(min_value_children < root->beta)
             {
-                beta = min_value_children;
+                root->beta = min_value_children;
             }
-            /*if(alpha >= beta)
-            {
-                free_arbore_part_2(nod->next);
-                nod->next = NULL;
-                pruned = 1;
-            }
-            nod = nod->next;*/
             nod = nod->next;
-            if(alpha >= beta && nod != NULL)
+            if(root->alpha >= root->beta && nod != NULL)
             {
                 min_value_children = nod->prev->value;
                 nod->prev->next = NULL;
@@ -517,6 +512,259 @@ void complete_with_alpha_beta(arbore_part_2_node *root, int alpha, int beta)
         }
         root->value = min_value_children;
     }
+}
+
+arbore_bonus_node *new_node_bonus(int nr_players)
+{
+    arbore_bonus_node *nod_nou = malloc(sizeof(arbore_bonus_node));
+    nod_nou->values = calloc(nr_players, sizeof(int));
+    nod_nou->child = NULL;
+    nod_nou->parent = NULL;
+    nod_nou->next = NULL;
+    nod_nou->prev = NULL;
+    nod_nou->type = 0;
+    return nod_nou;
+}
+
+int level_from_root_bonus(arbore_bonus_node *nod)
+{
+    int level = 0;
+    arbore_bonus_node *aux = nod;
+    while(aux->parent != NULL)
+    {
+        level++;
+        aux = aux->parent;
+    }
+    return level;
+}
+
+void print_tabs_bonus(arbore_bonus_node *nod, FILE *fisier_out)
+{
+    int number_of_tabs = level_from_root_bonus(nod);
+    int i;
+    for(i = 0; i < number_of_tabs; i++)
+    {
+        fprintf(fisier_out, "\t");
+    }
+}
+
+void print_with_brakets(arbore_bonus_node *nod, FILE *fisier_out, int nr_players)
+{
+    fprintf(fisier_out, "[");
+    int i;
+    for(i = 0; i < nr_players - 1; i++)
+    {
+        fprintf(fisier_out, "%d,", nod->values[i]);
+    }
+    fprintf(fisier_out, "%d]\n", nod->values[nr_players - 1]);
+}
+
+void print_tree_bonus(arbore_bonus_node *root, FILE *fisier_out, int nr_players)
+{
+    if(root == NULL)
+        return;
+
+    print_tabs_bonus(root, fisier_out);
+	print_with_brakets(root, fisier_out, nr_players);
+
+    print_tree_bonus(root->child, fisier_out, nr_players);
+    print_tree_bonus(root->next, fisier_out, nr_players);
+}
+
+void push_child_bonus(arbore_bonus_node **head, arbore_bonus_node *nod_nou, arbore_bonus_node *parent)
+{
+    if((*head) == NULL)
+    {
+        nod_nou->next = *head;
+        *head = nod_nou;
+    }
+    else
+    {
+        arbore_bonus_node *i = *head;
+        while(i->next)
+        {
+            i = i->next;
+        }
+        i->next = nod_nou;
+        nod_nou->prev = i;
+    }
+    nod_nou->parent = parent;
+}
+
+void braket_to_int_bonus(char *line, int nr_players, int type, int *vector)
+{
+	char *auxiliar = malloc((strlen(line) + 1) * sizeof(char));
+	int i;
+	if(type == 1)
+	{
+		auxiliar[0] = line[1];
+		auxiliar[1] = '\0';
+		vector[0] = atoi(auxiliar);
+	}
+	if(type == 0)
+	{
+		int index = 0;
+        char *p = malloc(strlen(line) * sizeof(char));
+        strcpy(p, line + 1);
+        char *pointer;
+        pointer = p;
+        while(pointer[0] != '\0')
+        {
+            char *aux = malloc((strlen(pointer) + 1) * sizeof(char));
+            strcpy(aux, pointer);
+            for(i = 0; i < strlen(aux); i++)
+            {
+                if(aux[i] == ',' || aux[i] == ']')
+                {
+                    aux[i] = '\0';
+                    strcpy(pointer, aux + i + 1);
+                }
+            }
+            vector[index] = atoi(aux);
+            index++;
+            free(aux);
+        }
+        free(p);
+	}
+    free(auxiliar);
+}
+
+void transform_row_bonus(char *line, int **vector_values, int *vector_type_of_brakets, int nr_players)
+{
+    int i = 0;
+    char *p = strtok(line, " ");
+    while(p != NULL)
+    {
+        if(p[0] == '(')
+        {
+            vector_type_of_brakets[i] = 1;
+        }
+        else
+        {
+            vector_type_of_brakets[i] = 0;
+        }
+        braket_to_int_bonus(p, nr_players, vector_type_of_brakets[i], vector_values[i]);
+        p = strtok(NULL, " ");
+        i++;
+    }
+}
+
+void work_with_line_bonus(arbore_bonus_node *root, int index_of_line, int *index_of_vector, int **vector_values, int *vector_type_of_brakets, int nr_players)
+{
+    if(root == NULL)
+        return;
+	
+    int i;
+    if(level_from_root_bonus(root) == index_of_line)
+    {
+        if(vector_type_of_brakets[(*index_of_vector)] == 1)
+        {
+            for(i = 0; i < vector_values[(*index_of_vector)][0]; i++)
+            {
+                arbore_bonus_node *nod_nou = new_node_bonus(nr_players);
+				if((index_of_line + 1) % nr_players == 0)
+				{
+					nod_nou->type = 1;
+				}
+				else
+				{
+					nod_nou->type = -1;
+				}
+                push_child_bonus(&(root->child), nod_nou, root);
+            }
+        }
+        else
+        {
+			for(i = 0; i < nr_players; i++)
+			{
+				root->values[i] = vector_values[(*index_of_vector)][i];
+			}
+        }
+        *index_of_vector = *index_of_vector + 1;
+    }
+	
+    work_with_line_bonus(root->child, index_of_line, index_of_vector, vector_values, vector_type_of_brakets, nr_players);
+    work_with_line_bonus(root->next, index_of_line, index_of_vector, vector_values, vector_type_of_brakets, nr_players);
+}
+
+int *maxim_in_list_bonus(arbore_bonus_node *head)
+{
+    arbore_bonus_node *aux = head->next;
+	int *adress = head->values;
+    int maxim = head->values[0];
+    while(aux != NULL)
+    {
+        if(aux->values[0] > maxim)
+        {
+            maxim = aux->values[0];
+			adress = aux->values;
+        }
+        aux = aux->next;
+    }
+    return adress;
+}
+
+int *minim_in_list_bonus(arbore_bonus_node *head)
+{
+    arbore_bonus_node *aux = head->next;
+	int *adress = head->values;
+    int minim = head->values[0];
+    while(aux != NULL)
+    {
+        if(aux->values[0] < minim)
+        {
+            minim = aux->values[0];
+			adress = aux->values;
+        }
+        aux = aux->next;
+    }
+    return adress;
+}
+
+void complete_tree_with_mini_max_bonus(arbore_bonus_node *root, int index_of_line, int nr_players)
+{
+    if (root == NULL)
+        return;
+
+    if (level_from_root_bonus(root) == index_of_line)
+    {
+        if (root->child != NULL)
+        {
+            if (root->type == 1)
+            {
+				int i;
+				int *vector = maxim_in_list_bonus(root->child);
+                for(i = 0; i < nr_players; i++)
+				{
+					root->values[i] = vector[i];
+				}
+            }
+            if (root->type == -1)
+            {
+				int i;
+                int *vector = minim_in_list_bonus(root->child);
+				for(i = 0; i < nr_players; i++)
+				{
+					root->values[i] = vector[i];
+				}
+            }
+        }
+    }
+
+    complete_tree_with_mini_max_bonus(root->child, index_of_line, nr_players);
+    complete_tree_with_mini_max_bonus(root->next, index_of_line, nr_players);
+}
+
+void free_arbore_bonus(arbore_bonus_node *nod)
+{
+    if(nod == NULL)
+        return;
+
+    free_arbore_bonus(nod->next);
+    free_arbore_bonus(nod->child);
+
+    free(nod->values);
+    free(nod);
 }
 
 int main(int argc, char **argv)
@@ -546,9 +794,9 @@ int main(int argc, char **argv)
     if(strstr(argv[1], "-c2"))
     {       
         int nr_rows, i;
-        char *input_buffer = malloc(1000000 * sizeof(char));
-        int *vector_values = malloc(500000 * sizeof(int));
-        int *vector_type_of_brakets = malloc(500000 * sizeof(int));
+        char *input_buffer = malloc(10000000 * sizeof(char));
+        int *vector_values = malloc(5000000 * sizeof(int));
+        int *vector_type_of_brakets = malloc(5000000 * sizeof(int));
         arbore_part_2_node *root = new_node_part_2();
         root->type = 1;
         FILE *fisier_in = fopen(argv[2], "r");
@@ -557,7 +805,7 @@ int main(int argc, char **argv)
         fgetc(fisier_in);
         for(i = 0; i < nr_rows; i++)
         {
-            fgets(input_buffer, 1000000,fisier_in);
+            fgets(input_buffer, 10000000,fisier_in);
             input_buffer[strlen(input_buffer) - 1] = '\0';
             transform_row(input_buffer, vector_values, vector_type_of_brakets);
             int index = 0;
@@ -595,7 +843,9 @@ int main(int argc, char **argv)
             int index = 0;
             work_with_line(root, i, &index, vector_values, vector_type_of_brakets);
         }
-        complete_with_alpha_beta(root, -999999999, 999999999);
+        root->alpha = -999999999;
+        root->beta =999999999;
+        complete_with_alpha_beta(root);
         print_tree(root, fisier_out);
         free_arbore_part_2(root);
         fclose(fisier_in);
@@ -606,7 +856,43 @@ int main(int argc, char **argv)
     }
     if(strstr(argv[1], "b"))
     {
-        printf("-b\n");
+        int nr_rows, nr_players, i;
+        FILE *fisier_in = fopen(argv[2], "r");
+        FILE *fisier_out = fopen(argv[3], "w");
+        fscanf(fisier_in, "%d %d", &nr_rows, &nr_players);
+        fgetc(fisier_in);
+        char *input_buffer = malloc(1000000 * sizeof(char));
+        int **vector_values = malloc(500000 * sizeof(int *));
+        int *vector_type_of_brakets = malloc(500000 * sizeof(int));
+        arbore_bonus_node *root = new_node_bonus(nr_players);
+        root->type = 1;
+        for(i = 0; i < 500000; i++)
+        {
+            vector_values[i] = malloc(nr_players * sizeof(int));
+        }
+        for(i = 0; i < nr_rows; i++)
+        {
+            fgets(input_buffer, 1000000,fisier_in);
+            input_buffer[strlen(input_buffer) - 1] = '\0';
+            transform_row_bonus(input_buffer, vector_values, vector_type_of_brakets, nr_players);
+            int index = 0;
+            work_with_line_bonus(root, i, &index, vector_values, vector_type_of_brakets, nr_players);
+        }
+		for(i = nr_rows - 2; i >= 0; i--)
+        {
+            complete_tree_with_mini_max_bonus(root, i, nr_players);
+        }
+		print_tree_bonus(root, fisier_out, nr_players);
+        free_arbore_bonus(root);
+        fclose(fisier_in);
+        fclose(fisier_out);
+        for(i = 0; i < 500000; i++)
+        {
+            free(vector_values[i]);
+        }
+        free(input_buffer);
+        free(vector_values);
+        free(vector_type_of_brakets);
     }
     return 0;
 }
